@@ -2,3 +2,4 @@ bachet.el --- Solution to the Bachet's Problem
 
 calkinwilf.pl --- Compute a node in a Calkin-Wilf tree  
 smu.pl --- Solution to a Knights and Knaves Problem 
+trw.pl --- Trapping Rain Water 
