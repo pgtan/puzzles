@@ -1,0 +1,249 @@
+;;; baum1.lg --- Drawing Christmas Trees with LOGO -*- mode: logo -*-
+
+to Baum1 :AnzahlZeilen
+ct
+repeat :AnzahlZeilen [print word ~
+       		      Zeichenkette difference :AnzahlZeilen repcount "\  ~
+		      Zeichenkette2 difference product 2 
+		      		    	       	                repcount 
+					                1 
+			            [* o x]]
+Baumstamm :AnzahlZeilen
+end
+
+to Zeichenkette :AnzahlZeichen :Zeichen
+; gibt ein Wort aus, das aus ANZAHLZEICHEN ZEICHEN-en besteht.
+local "Tempstr 
+make "Tempstr "
+repeat :AnzahlZeichen [make "Tempstr word :Zeichen :Tempstr]
+output :Tempstr
+end
+
+
+to Zeichenkette2 :AnzahlZeichen :Zeichenliste
+; gibt ein Wort aus, das aus ANZAHLZEICHEN ZEICHEN-en besteht.
+local "Tempstr 
+make "Tempstr "
+repeat :AnzahlZeichen [make "Tempstr word pick :Zeichenliste :Tempstr]
+output :Tempstr
+end
+
+to Zeichenkette3 :AnzahlZeichen :Zeichenliste :Wahrscheinlichkeit
+; gibt ein Wort aus, das aus ANZAHLZEICHEN ZEICHEN-en besteht. Jedes
+; Zeichen wird mit Wahrscheinlichkeit von WAHRSCHEINLICHKEIT% umgekehrt 
+local "Tempstr 
+make "Tempstr "
+repeat :AnzahlZeichen [make "Tempstr 
+       		      	    word ifelse prozent_randomp :Wahrscheinlichkeit
+			    	 	[standout pick :Zeichenliste]
+			    	 	[pick :Zeichenliste] 
+				 :Tempstr]
+output :Tempstr
+end
+
+
+to Baumstamm :AnzahlZeilen 
+; Beschreibung
+; Lokale Definitionen
+local "LetzteZeile
+make "LetzteZeile difference product :AnzahlZeilen 2 1
+local "Stammstr ; Die Stammzeile
+make "Stammstr Zeichenkette 3 "I
+local "Stammgroesse ; Anzahl der Stammzeilen
+make "Stammgroesse round  product 1.2 count :Stammstr 
+; Programm
+repeat :Stammgroesse [print word ~
+Zeichenkette quotient difference :LetzteZeile count :Stammstr 2 "\  :Stammstr]
+end
+
+to zerop :num
+   output equalp :num 0
+end
+    
+to prozent_randomp :prozent
+   output lessp random 100 :prozent
+end
+
+
+to make_baum :AnzahlZeilen
+ct
+localmake "baum []
+repeat :AnzahlZeilen [queue "baum word ~
+       		      Zeichenkette difference :AnzahlZeilen repcount "\  ~
+		      Zeichenkette2 difference product 2 
+		      		    	       	                repcount 
+					                1 
+			            [* o x \~]]
+output :baum				    
+end
+
+to gehe_zeilen_forw :s :z
+   output sum :s product 2 sum :z -1
+end   
+
+
+to make_tanne :l :b :g
+   local "n
+   make "n (:g/2+1)*(:b-1)+(:l+1)/2
+   make "n int :n/:b
+   output cascade difference :b 1 [lput se ~
+   	      	       gehe_zeilen_forw first last ? :g/2 
+		       ifelse equalp # :b-1 [:l]
+		       	      [gehe_zeilen_forw last last ? 
+			      			:n-:g/2]
+		    ?] (list se 1 gehe_zeilen_forw 1 :n)
+end
+
+to evenp :z
+   output equalp modulo :z 2 0
+end
+
+
+;map [filter [not evenp ?] iseq first ? last ?] make_tanne 15 3 6
+
+to make_baum3 :l :g :b
+ct
+foreach map [filter [[x] not evenp :x] iseq first ? last ?] ~
+	    make_tanne :l :g :b [[x] ~
+	foreach :x [print word Zeichenkette (:l-?)/2 "\ ~
+		   	       Zeichenkette2 ? [* o x \~ ✱ O]]]
+end
+
+
+to max :a :b
+   output ifelse greaterp :a :b [:a] [:b]
+end
+
+to tanne.split :l :b
+   localmake "d int quotient :l :b
+   output (cascade :b [lput se last last ?
+   	       	     	sum :d last last ?
+		     ?] [1]
+	       [se butlast butfirst ? (list se first last ? :l)])
+end
+
+to tanne.shift :t :g
+   output map [se max 1 difference first ? :g last ?] :t
+end
+
+to tanne.shift.exp :t :g
+   output map [se max 1 
+   	      	      (difference first ? sum :g power 2 difference # 1)  
+		  last ?] :t
+end
+
+to tanne.shift.prop :t :g
+   output map [se max 1 
+   	      	      (difference first ? product :g difference # 1)  
+		  last ?] :t
+end
+
+to tanne.output :t
+   output map [filter [[x] not evenp :x] iseq first ? last ?] :t
+end
+
+to tanne.print :t
+localmake "l last last :t
+foreach  :t [[b] foreach :b [print word Zeichenkette (:l-?)/2 "\ ~
+		   	       Zeichenkette2 ? [* o x \~  O]]]
+end
+
+to tanne.draw.branch :l :xstep
+   localmake "fw product :l :xstep
+   localmake "y ycor
+   setheading 90
+   pd
+   fd :fw
+   left 180
+   fd product 2 :fw
+   left 180
+   fd :fw
+end   
+
+
+to tanne.draw.bunt :l :xstep
+   localmake "fw product :l :xstep
+   localmake "p pencolor
+   setheading 90
+   pd
+   repeat :fw [fd 1]
+   left 180
+   repeat :l [if lessp random 10 3 ~
+   	      	  [setpencolor random 9] fd 2*:xstep setpencolor :p] 
+   setpencolor :p
+   left 180
+   pu
+   fd :fw 
+end   
+
+to tanne.draw.branches :f :t :g :xstep
+   pd
+   foreach :t [apply :f list ? :xstep ~
+   	      			   setheading 180 pu fd :g]
+end   
+
+to tanne.draw.open :pair :xstep :ystep
+   localmake "x0 xcor
+   localmake "x1 product :xstep difference first :pair 1
+   localmake "x2 product :xstep difference last :pair 1	
+   localmake "y1 ycor
+   localmake "y2 difference :y1 ~
+   	     	 	    product :ystep ~
+			    	    difference last :pair first :pair
+   pd 
+   setxy :x1 :y1
+   setxy :x2 :y2
+   pu
+   setxy minus :x2 :y2
+   pd
+   setxy minus :x1 :y1
+   setxy minus :x0 :y1  
+   pu setxy :x2 :y2	
+end   
+
+; cs pu setpos [0 200] pd 
+; cs pu setpos [0 200] pd foreach tanne.shift tanne.split 49 5 3 [setxy minus (5 * first ?) ycor setxy minus (5 * last ?)  difference ycor product 6 difference last ? first ?]
+
+
+; repeat 11  [cs ht  pu setpos [0 300] pd setpensize 8 setpencolor 2 foreach tanne.output tanne.shift tanne.split 89 3 12 [tanne.draw.branches "tanne.draw.bunt ? 8 2] wait 10]
+
+to draw.triangle.isosecles.filled :side :ang :color
+   localmake "angle sum 180 :ang
+   localmake "x xcor
+   filled :color ~
+   	  [seth :angle pd fd :side ~
+	   seth 90 setxy difference :x xcor ycor~
+	   left sum 90 :ang fd :side]
+end 
+
+
+to draw.triangle.isosecles.schmuck :side :ang :color
+   localmake "angle sum 180 :ang
+   localmake "x xcor
+   filled :color ~
+   	  [seth :angle pd fd :side ~
+	   draw.schmuck	5
+	   seth 90 setxy difference :x xcor ycor~
+	   draw.schmuck	5
+	   left sum 90 :ang fd :side]
+end 
+
+
+to tanne.draw.filled :l :a :b
+   cs ht pu setpos [0 400] 
+   setpencolor 2
+   pd draw.schmuck 5
+   repeat difference :b 1 [draw.triangle.isosecles.schmuck :l*# sum :a 5*# 2 ~
+   	  	     	   seth 180 fd :l/2+10*#]
+   draw.triangle.isosecles.schmuck :l*:b sum :a 5*:b 2
+end
+
+
+to draw.schmuck :s
+   localmake "x xcor
+   localmake "y ycor
+   localmake "c pencolor
+   setpencolor random 8 setpensize 5
+   arc 360  :s
+   setpencolor :c
+end
